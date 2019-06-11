@@ -1,71 +1,63 @@
 package frequency
 
 import (
+
+	"regexp"
 	"strings"
 	"unicode"
-	"regexp"
-	"fmt"
 )
 
 func filter(c rune) bool {
 	return !unicode.IsLetter(c) && !unicode.IsNumber(c)
 }
 
+type word struct {
+	name  string
+	count int
+}
+
 // GetPopular return 10 popular word
-func GetPopular(str string) []string {
-	words:=strings.FieldsFunc(str, filter)
-	strBytes :=[]byte(str)
-	result:=make(map[string]int)
-	for _,v := range words {
-		if _,ok := result[v]; !ok {
+func GetPopular(str string) []word {
+	words := strings.FieldsFunc(str, filter)
+	strBytes := []byte(str)
+	result := make(map[string]int)
+	var popular []word
+	for _, v := range words {
+		if _, ok := result[v]; !ok {
 			re := regexp.MustCompile(v)
-			result[v]=len(re.FindAll(strBytes, -1))
-		}	
+			result[v] = len(re.FindAll(strBytes, -1))
+			popular=append(popular,word{name:v,count:result[v]})
+		}
 	}
-	fmt.Println(result)
-	var popular = make([]string,10)
-	return popular
+	// Checking if words < 10
+	var n int
+	if len(result) < 10 {
+		n = len(result)
+	} else {
+		n =10
+	}
+	return qwicksort(popular)[:n]
 }
 
-
-func rex(res []int, i int, s int) int{
-	s=s+res[i]
-    if i ==0 {
-		return  s
-	}  
-	return rex(res, i-1,s)
-} 
-
-func recur() {
-	res:=[]int{1,2,3,4,5,6,7,8,9}
-	fmt.Println("===>",rex(res,len(res)-1,0))
-}
-
-
-
-func qwicksort(arr []int) []int {
+func qwicksort(arr []word) []word {
 	if len(arr) < 2 {
-		return  arr
+		return arr
 	}
-	prine:=arr[0]
-	var left, rigt, result []int
-	for _,v := range arr[1:] {	
-		if v > prine {
-			rigt = append(rigt,v)
-		}  else {
-			left = append(left,v)
+	prine := arr[0]
+	var left, rigt, result []word
+	for _,v := range arr[1:] {
+		w:=word{name: v.name, count:v.count}
+		if v.count < prine.count {
+			rigt = append(rigt,w)
+		} else {
+			left = append(left, w)
 		}
 	}
 
 	left = qwicksort(append(left))
 	rigt = qwicksort(append(rigt))
-	result = append(left,prine)
-	result = append(result,rigt...)
+	result = append(left, prine)
+	result = append(result, rigt...)
 
 	return result
-}
-
-func qwicksortstart() {
-	res:=[]int{9,16,7,4,45,6,33,8,37,100,79,1}
-	fmt.Println(qwicksort(res))
 }
